@@ -1,0 +1,35 @@
+# Windsurf Coding Standards for Project Sheng V1
+
+## Code Quality Standards
+- **Type Hinting**: All functions must have complete type annotations
+- **PEP 8 Compliance**: Strict adherence to Python style guidelines
+- **Docstrings**: Google-style docstrings for all public functions
+- **Error Handling**: Explicit exception handling with custom exceptions
+
+## Project Structure
+```
+sheng_sentiment_base/
+├── src/
+│   ├── scrapers/          # Data collection modules
+│   ├── tokenizers/        # NLP preprocessing
+│   ├── pipelines/         # Data processing workflows
+│   └── utils/             # Helper utilities
+├── data/
+│   ├── raw/               # Unprocessed scraped data
+│   ├── processed/         # Cleaned datasets
+│   └── dictionaries/        # Sheng slang mappings
+├── tests/                 # Unit and integration tests
+├── docs/                  # Documentation
+└── notebooks/             # Exploration notebooks
+```
+
+## Git Conventions
+- Format: `type(scope): description`
+- Types: feat, fix, docs, test, refactor, perf
+- Example: `feat(scraper): add rate-limited X API client`
+
+## Naming Conventions
+- Classes: PascalCase (e.g., `ShengTokenizer`)
+- Functions: snake_case (e.g., `normalize_slang`)
+- Constants: UPPER_SNAKE_CASE
+- Private: _leading_underscore

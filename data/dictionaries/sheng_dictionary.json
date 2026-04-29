@@ -1,0 +1,147 @@
+{
+  "metadata": {
+    "name": "Sheng-Native Dictionary v0.1",
+    "created": "2026-04-29",
+    "dialect": "Nairobi Sheng",
+    "total_entries": 75
+  },
+  "slang_mappings": {
+    "ronga": "rongai",
+    "rongaa": "rongai",
+    "rong": "rongai",
+    "dem": "dame",
+    "damee": "dame",
+    "msupa": "dame",
+    "chali": "chap",
+    "chap": "chap",
+    "budaa": "buda",
+    "buda": "buda",
+    "fathers": "buda",
+    "mdosi": "mdosi",
+    "boss": "mdosi",
+    "danyi": "danyi",
+    "pesa": "chapaa",
+    "chapaa": "chapaa",
+    "mulla": "chapaa",
+    "do": "chapaa",
+    "doh": "chapaa",
+    "mbogi": "mbogi",
+    "crew": "mbogi",
+    "squad": "mbogi",
+    "genje": "genje",
+    "rieng": "rieng",
+    "trend": "rieng",
+    "dunda": "dunda",
+    "party": "dunda",
+    "sherehe": "dunda",
+    "kanairo": "nairobi",
+    "nrb": "nairobi",
+    "nairobae": "nairobi",
+    "nganya": "nganya",
+    "mat": "nganya",
+    "mathree": "nganya",
+    "msee": "msee",
+    "jango": "msee",
+    "nigga": "msee",
+    "mbona": "mbona",
+    "sasa": "sasa",
+    "fiti": "fiti",
+    "poa": "fiti",
+    "fresh": "fiti",
+    "noma": "noma",
+    "mbaya": "noma",
+    "dedi": "noma",
+    "form": "form",
+    "tuko": "tuko",
+    "kuja": "kuja",
+    "kuhama": "kuhama",
+    "kutoka": "kutoka",
+    "kwenda": "kwenda",
+    "enda": "kwenda",
+    "ingia": "ingia",
+    "toka": "toka",
+    "rudi": "rudi",
+    "kaa": "kaa",
+    "simama": "simama",
+    "keti": "keti",
+    "lala": "lala",
+    "amka": "amka",
+    "oga": "oga",
+    "kula": "kula",
+    "kunywa": "kunywa",
+    "piga": "piga",
+    "chapa": "piga",
+    "randa": "randa",
+    "tembea": "tembea",
+    "endesha": "endesha",
+    "cheza": "cheza",
+    "imba": "imba",
+    "tamba": "tamba",
+    "tafuta": "tafuta",
+    "chukua": "chukua",
+    "leta": "leta",
+    "peleka": "peleka",
+    "nunua": "nunua",
+    "uza": "uza",
+    "pata": "pata",
+    "poteza": "poteza",
+    "shinda": "shinda",
+    "kosa": "kosa",
+    "weza": "weza",
+    "jua": "jua",
+    "jifunza": "jifunza",
+    "soma": "soma",
+    "andika": "andika",
+    "jibu": "jibu",
+    "uliza": "uliza",
+    "ambia": "ambia",
+    "sema": "sema",
+    "ongea": "ongea",
+    "ita": "ita"
+  },
+  "contextual_sentiment": {
+    "kudunda": {
+      "default": "negative",
+      "contexts": {
+        "party": "positive",
+        "dance": "positive",
+        "fail": "negative",
+        "fall": "negative"
+      }
+    },
+    "noma": {
+      "default": "negative",
+      "contexts": {
+        "intense": "positive",
+        "good": "positive",
+        "bad": "negative"
+      }
+    },
+    "chapaa": {
+      "default": "positive",
+      "contexts": {
+        "money": "neutral",
+        "wealth": "positive",
+        "debt": "negative"
+      }
+    },
+    "dunda": {
+      "default": "positive",
+      "contexts": {
+        "party": "positive",
+        "waste": "negative",
+        "spend": "neutral"
+      }
+    }
+  },
+  "code_switching_patterns": {
+    "sheng_english": [
+      "na", "kwa", "ya", "wa", "za",
+      "ni", "si", "hii", "hao", "wale"
+    ],
+    "sheng_swahili": [
+      "sana", "tu", "pia", "tena", "bado",
+      "kabisa", "halafu", "kwanza", "pole"
+    ]
+  }
+}
