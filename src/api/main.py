@@ -151,6 +151,25 @@ async def get_stats():
     }
 
 
+@app.get("/v1/dictionary", tags=["System"])
+async def get_dictionary():
+    """Get the current Sheng dictionary entries."""
+    if tokenizer is None:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+    
+    return {
+        "metadata": {
+            "version": "v0.3",
+            "total_slang_terms": len(tokenizer.slang_mappings),
+            "total_sentiment_rules": len(tokenizer.sentiment_rules),
+            "total_logistics_intents": len(tokenizer.logistics_intent_rules)
+        },
+        "slang_mappings": tokenizer.slang_mappings,
+        "sentiment_rules": tokenizer.sentiment_rules,
+        "logistics_intents": tokenizer.logistics_intent_rules
+    }
+
+
 @app.get("/", tags=["Root"])
 async def root():
     """Root endpoint with API information."""

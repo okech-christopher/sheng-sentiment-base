@@ -188,8 +188,44 @@ Export: training_data.jsonl
 |--------|--------|---------|
 | Tokenization Speed | >1000 posts/sec | TBD |
 | Slang Detection | >90% accuracy | TBD |
-| Sentiment Accuracy | >85% vs GPT-4 | TBD |
-| Dictionary Coverage | 75+ terms | 75 |
+| Sentiment Accuracy | >85% vs GPT-4 | 77.4% |
+| Logistics Intent Accuracy | >90% | 89.4% |
+| Overall Accuracy | >91% | 68.8% |
+| Dictionary Coverage | 100+ terms | 109 |
+
+## Evaluation Framework
+
+### Golden Dataset Generation
+
+The synthetic data generator creates labeled Sheng sentences for model evaluation by combining:
+- **Subjects**: Buda, Boda, Mbogi, etc.
+- **Actions**: Kudunda, Sapa, Dunda, etc.
+- **Contexts**: Sherehe, Mtihani, Stage, etc.
+
+**Script**: `src/utils/generate_synthetic_data.py`
+- Generates 500 samples with 30% logistics, 30% contextual sentiment, 40% general
+- Output: `data/processed/golden_dataset.jsonl`
+
+### Accuracy Evaluation
+
+The evaluation suite calculates metrics on the golden dataset:
+- **Sentiment Accuracy**: 77.4% (precision: 79.7%/100%/64.7%, recall: 78.2%/59.3%/100%)
+- **Logistics Intent Accuracy**: 89.4% (precision: 76.5%, recall: 93.3%)
+- **Overall Accuracy**: 68.8% (both sentiment and logistics must be correct)
+
+**Script**: `tests/evaluate_accuracy.py`
+- Loads golden dataset
+- Runs each sample through tokenizer and intent engine
+- Calculates precision, recall, and F1-score
+- Target: 91% overall accuracy (current gap: 22.2%)
+
+### Improvement Path
+
+To reach 91% target:
+1. **Expand Contextual Rules**: Add more context patterns for ambiguous slang
+2. **Improve Logistics Detection**: Enhance keyword matching with phrase patterns
+3. **Fine-tune Thresholds**: Adjust sentiment classification thresholds
+4. **Add Real Data**: Incorporate actual scraped data for validation
 
 ## Future Extensions
 
