@@ -1,9 +1,10 @@
 {
   "metadata": {
-    "name": "Sheng-Native Dictionary v0.1",
+    "name": "Sheng-Native Dictionary v0.2",
     "created": "2026-04-29",
+    "updated": "2026-04-30",
     "dialect": "Nairobi Sheng",
-    "total_entries": 75
+    "total_entries": 86
   },
   "slang_mappings": {
     "ronga": "rongai",
@@ -33,7 +34,10 @@
     "trend": "rieng",
     "dunda": "dunda",
     "party": "dunda",
-    "sherehe": "dunda",
+    "kudunda": "kudunda",
+    "sherehe": "sherehe",
+    "mzinga": "mzinga",
+    "mtihani": "mtihani",
     "kanairo": "nairobi",
     "nrb": "nairobi",
     "nairobae": "nairobi",
@@ -97,16 +101,37 @@
     "ambia": "ambia",
     "sema": "sema",
     "ongea": "ongea",
-    "ita": "ita"
+    "ita": "ita",
+    "sapa": "sapa",
+    "broke": "sapa",
+    "hama": "sapa",
+    "kando": "sapa"
   },
   "contextual_sentiment": {
     "kudunda": {
       "default": "negative",
       "contexts": {
+        "sherehe": "positive",
+        "mzinga": "positive",
+        "club": "positive",
         "party": "positive",
         "dance": "positive",
+        "mtihani": "negative",
+        "exam": "negative",
+        "job": "negative",
         "fail": "negative",
         "fall": "negative"
+      }
+    },
+    "sapa": {
+      "default": "negative",
+      "contexts": {
+        "pesa": "negative",
+        "chapaa": "negative",
+        "do": "negative",
+        "broke": "negative",
+        "pocket": "negative",
+        "wallet": "negative"
       }
     },
     "noma": {
@@ -131,6 +156,22 @@
         "party": "positive",
         "waste": "negative",
         "spend": "neutral"
+      }
+    },
+    "mbogi": {
+      "default": "positive",
+      "contexts": {
+        "crew": "positive",
+        "squad": "positive",
+        "bad": "negative"
+      }
+    },
+    "fiti": {
+      "default": "positive",
+      "contexts": {
+        "good": "positive",
+        "cool": "positive",
+        "bad": "negative"
       }
     }
   },

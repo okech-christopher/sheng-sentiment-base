@@ -2,5 +2,6 @@
 
 from .logger import setup_logger
 from .config import Config
+from .export_training_data import TrainingDataExporter
 
-__all__ = ["setup_logger", "Config"]
+__all__ = ["setup_logger", "Config", "TrainingDataExporter"]

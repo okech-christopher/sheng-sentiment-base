@@ -160,21 +160,49 @@ class ShengTokenizer:
         
         return switches
     
+    def _get_token_window(
+        self,
+        tokens: List[str],
+        target_index: int,
+        window_size: int = 3
+    ) -> List[str]:
+        """Get tokens within a window around the target index.
+        
+        Args:
+            tokens: List of all tokens
+            target_index: Index of the target token
+            window_size: Number of tokens to look ahead/behind
+            
+        Returns:
+            List of tokens within the window
+        """
+        start = max(0, target_index - window_size)
+        end = min(len(tokens), target_index + window_size + 1)
+        return tokens[start:end]
+    
     def analyze_contextual_sentiment(
         self,
         text: str,
-        slang_terms: List[str]
+        slang_terms: List[str],
+        use_lookahead: bool = True
     ) -> Tuple[float, str]:
-        """Analyze sentiment with Sheng-specific context.
+        """Analyze sentiment with Sheng-specific context and look-ahead window.
         
         Many Sheng terms have context-dependent sentiment (e.g., 'kudunda').
-        This method applies contextual rules to determine accurate sentiment.
+        This method applies contextual rules with a 3-token look-ahead window
+        to determine accurate sentiment based on neighboring words.
         
+        Args:
+            text: Original input text
+            slang_terms: List of detected slang terms
+            use_lookahead: Whether to use look-ahead window analysis
+            
         Returns:
             Tuple of (sentiment_score, sentiment_label)
             Score range: -1.0 (negative) to 1.0 (positive)
         """
         text_lower = text.lower()
+        tokens = re.findall(r'\b\w+\b', text_lower)
         
         # Base sentiment
         sentiment_score = 0.0
@@ -187,13 +215,31 @@ class ShengTokenizer:
                 default = rule.get("default", "neutral")
                 contexts = rule.get("contexts", {})
                 
-                # Check for context keywords
                 matched_context = None
-                for context_word, sentiment in contexts.items():
-                    if context_word in text_lower:
-                        matched_context = sentiment
-                        sentiment_indicators.append(f"{term}:{sentiment}")
-                        break
+                
+                if use_lookahead:
+                    # Find all indices where this term appears
+                    term_indices = [i for i, t in enumerate(tokens) if t == term]
+                    
+                    # Check context within 3-token window for each occurrence
+                    for idx in term_indices:
+                        window = self._get_token_window(tokens, idx, window_size=3)
+                        window_text = ' '.join(window)
+                        
+                        for context_word, sentiment in contexts.items():
+                            if context_word in window_text:
+                                matched_context = sentiment
+                                sentiment_indicators.append(f"{term}:{sentiment} (window: {window_text})")
+                                break
+                        if matched_context:
+                            break
+                else:
+                    # Fallback to simple keyword matching
+                    for context_word, sentiment in contexts.items():
+                        if context_word in text_lower:
+                            matched_context = sentiment
+                            sentiment_indicators.append(f"{term}:{sentiment}")
+                            break
                 
                 # Apply sentiment
                 if matched_context:

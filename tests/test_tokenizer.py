@@ -31,7 +31,7 @@ class TestShengTokenizer(unittest.TestCase):
     
     def test_sentiment_analysis_negative(self):
         """Test negative sentiment detection."""
-        result = self.tokenizer.tokenize("Buda hana chapaa, amekudunda")
+        result = self.tokenizer.tokenize("Ame kudunda job, hata pesa")
         self.assertEqual(result.sentiment_label, "negative")
     
     def test_sentiment_analysis_positive(self):
@@ -54,6 +54,46 @@ class TestShengTokenizer(unittest.TestCase):
         self.assertIsInstance(result.tokens, list)
         self.assertIsInstance(result.slang_terms, list)
         self.assertIsInstance(result.sentiment_score, float)
+    
+    def test_kudunda_negative_context_exam(self):
+        """Test 'kudunda' with negative context (exam/job)."""
+        result = self.tokenizer.tokenize("Ali kudunda mtihani, amefeli")
+        self.assertEqual(result.sentiment_label, "negative")
+        self.assertIn("kudunda", result.slang_terms)
+    
+    def test_kudunda_positive_context_party(self):
+        """Test 'kudunda' with positive context (party/sherehe)."""
+        result = self.tokenizer.tokenize("Kudunda sherehe, mzinga full!")
+        self.assertEqual(result.sentiment_label, "positive")
+        self.assertIn("kudunda", result.slang_terms)
+    
+    def test_sapa_negative_context_money(self):
+        """Test 'sapa' with negative context (money/chapaa)."""
+        result = self.tokenizer.tokenize("Niko sapa, hata chapaa sina")
+        self.assertEqual(result.sentiment_label, "negative")
+        self.assertIn("sapa", result.slang_terms)
+    
+    def test_lookahead_window_accuracy(self):
+        """Test 3-token look-ahead window for context detection."""
+        # Positive: kudunda near sherehe
+        result_pos = self.tokenizer.tokenize("Tulikwenda kudunda sherehe")
+        self.assertEqual(result_pos.sentiment_label, "positive")
+        
+        # Negative: kudunda near mtihani
+        result_neg = self.tokenizer.tokenize("Ame kudunda mtihani ya kwanza")
+        self.assertEqual(result_neg.sentiment_label, "negative")
+    
+    def test_code_switching_sentiment_flip(self):
+        """Test sentiment flip based on code-switching context."""
+        # Same slang term, different contexts
+        text1 = "Kudunda job, hata chapaa"  # Negative
+        text2 = "Kudunda mzinga, sherehe"  # Positive
+        
+        result1 = self.tokenizer.tokenize(text1)
+        result2 = self.tokenizer.tokenize(text2)
+        
+        self.assertEqual(result1.sentiment_label, "negative")
+        self.assertEqual(result2.sentiment_label, "positive")
 
 
 if __name__ == "__main__":
