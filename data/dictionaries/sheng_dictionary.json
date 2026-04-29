@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "name": "Sheng-Native Dictionary v0.2",
+    "name": "Sheng-Native Dictionary v0.3",
     "created": "2026-04-29",
-    "updated": "2026-04-30",
+    "updated": "2026-05-01",
     "dialect": "Nairobi Sheng",
-    "total_entries": 86
+    "total_entries": 95
   },
   "slang_mappings": {
     "ronga": "rongai",
@@ -105,7 +105,17 @@
     "sapa": "sapa",
     "broke": "sapa",
     "hama": "sapa",
-    "kando": "sapa"
+    "kando": "sapa",
+    "mreki": "mreki",
+    "karao": "karao",
+    "jam": "jam",
+    "shorcut": "shorcut",
+    "shortcut": "shorcut",
+    "mabs": "mabs",
+    "stage": "stage",
+    "u-turn": "u-turn",
+    "panya": "panya",
+    "panya route": "panya route"
   },
   "contextual_sentiment": {
     "kudunda": {
@@ -174,6 +184,57 @@
         "bad": "negative"
       }
     }
+  },
+  "logistics_intent": {
+    "mreki": {
+      "intent": "obstacle_report",
+      "severity": "high",
+      "description": "Vehicle breakdown or mechanical failure"
+    },
+    "karao": {
+      "intent": "police_report",
+      "severity": "medium",
+      "description": "Police checkpoint or presence"
+    },
+    "jam": {
+      "intent": "traffic_report",
+      "severity": "medium",
+      "description": "Traffic congestion"
+    },
+    "shorcut": {
+      "intent": "route_suggestion",
+      "severity": "low",
+      "description": "Alternative route recommendation"
+    },
+    "mabs": {
+      "intent": "location_report",
+      "severity": "low",
+      "description": "Bus station or public transport hub"
+    },
+    "stage": {
+      "intent": "location_report",
+      "severity": "low",
+      "description": "Transport stage or pickup point"
+    },
+    "u-turn": {
+      "intent": "route_change",
+      "severity": "low",
+      "description": "Route reversal or change direction"
+    },
+    "panya": {
+      "intent": "unofficial_route",
+      "severity": "medium",
+      "description": "Unofficial or informal route"
+    }
+  },
+  "logistics_keywords": {
+    "police_report": ["karao", "police", "check", "roadblock", "kanjo"],
+    "traffic_report": ["jam", "traffic", "congestion", "slow", "gridlock"],
+    "obstacle_report": ["mreki", "breakdown", "mechanical", "stuck", "blocked"],
+    "location_report": ["mabs", "stage", "drop", "pick", "location"],
+    "route_suggestion": ["shorcut", "shortcut", "alternative", "other way"],
+    "route_change": ["u-turn", "turn", "change", "redirect"],
+    "unofficial_route": ["panya", "unofficial", "backroute", "hidden"]
   },
   "code_switching_patterns": {
     "sheng_english": [

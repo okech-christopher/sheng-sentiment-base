@@ -41,7 +41,68 @@ python -m src.tokenizers.sheng_tokenizer
 
 ## Usage
 
-### Tokenize Sheng Text
+### API Usage (FastAPI Service)
+
+Start the API server:
+
+```bash
+# Development mode
+python -m src.api.main
+
+# Production mode
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+**Analyze Sheng text via API:**
+
+```bash
+curl -X POST http://localhost:8000/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Karao wako mabs, jam imetupa",
+    "include_logistics": true,
+    "include_code_switches": true
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "original_text": "Karao wako mabs, jam imetupa",
+  "normalized_text": "karao wako mabs jam imetupa",
+  "tokens": ["karao", "wako", "mabs", "jam", "imetupa"],
+  "slang_terms": ["karao", "mabs", "jam"],
+  "code_switches": [],
+  "sentiment_score": -0.5,
+  "sentiment_label": "negative",
+  "logistics_intent": {
+    "intent": "police_report",
+    "severity": "medium",
+    "description": "Police checkpoint or presence detected"
+  },
+  "is_logistics": true,
+  "confidence": 0.6,
+  "metadata": {
+    "token_count": 5,
+    "slang_count": 3,
+    "switch_count": 0,
+    "has_logistics_intent": true
+  }
+}
+```
+
+**Run the demo script:**
+
+```bash
+# Start the API in a terminal
+python -m src.api.main
+
+# In another terminal, run the demo
+python demo_api.pyIn Progrss
+```
+
+###xTokenize Sheng Text
 
 ```python
 from src.tokenizers.sheng_tokenizer import ShengTokenizer

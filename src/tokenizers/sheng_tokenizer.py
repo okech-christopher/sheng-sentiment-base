@@ -27,7 +27,10 @@ class TokenizedOutput:
     code_switches: List[str]
     sentiment_score: float
     sentiment_label: str
-    metadata: Dict[str, Any]
+    logistics_intent: Optional[str] = None
+    logistics_severity: Optional[str] = None
+    logistics_description: Optional[str] = None
+    metadata: Dict[str, Any] = None
 
 
 class ShengTokenizer:
@@ -71,6 +74,8 @@ class ShengTokenizer:
             self.slang_mappings = data.get("slang_mappings", {})
             self.sentiment_rules = data.get("contextual_sentiment", {})
             self.code_switch_patterns = data.get("code_switching_patterns", {})
+            self.logistics_intent_rules = data.get("logistics_intent", {})
+            self.logistics_keywords = data.get("logistics_keywords", {})
             
             logger.info(f"Loaded dictionary: {data.get('metadata', {}).get('name', 'Unknown')}")
         except FileNotFoundError:
@@ -291,6 +296,9 @@ class ShengTokenizer:
                 code_switches=[],
                 sentiment_score=0.0,
                 sentiment_label="neutral",
+                logistics_intent=None,
+                logistics_severity=None,
+                logistics_description=None,
                 metadata={"error": "empty_input"}
             )
         
@@ -316,6 +324,11 @@ class ShengTokenizer:
             original, detected_slang
         )
         
+        # Step 7: Detect logistics intent
+        logistics_intent, logistics_severity, logistics_description = self.detect_logistics_intent(
+            original, detected_slang
+        )
+        
         return TokenizedOutput(
             original_text=original,
             normalized_text=text,
@@ -324,10 +337,14 @@ class ShengTokenizer:
             code_switches=code_switches,
             sentiment_score=sentiment_score,
             sentiment_label=sentiment_label,
+            logistics_intent=logistics_intent,
+            logistics_severity=logistics_severity,
+            logistics_description=logistics_description,
             metadata={
                 "token_count": len(tokens),
                 "slang_count": len(detected_slang),
-                "switch_count": len(code_switches)
+                "switch_count": len(code_switches),
+                "has_logistics_intent": logistics_intent is not None
             }
         )
     
@@ -354,6 +371,43 @@ class ShengTokenizer:
                 slang_counts[term] = slang_counts.get(term, 0) + 1
         
         return dict(sorted(slang_counts.items(), key=lambda x: x[1], reverse=True))
+    
+    def detect_logistics_intent(
+        self,
+        text: str,
+        slang_terms: List[str]
+    ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        """Detect logistics intent from Sheng text.
+        
+        Identifies if the text contains logistics-related information
+        such as police reports, traffic reports, route suggestions, etc.
+        
+        Args:
+            text: Original input text
+            slang_terms: List of detected slang terms
+            
+        Returns:
+            Tuple of (intent, severity, description)
+        """
+        text_lower = text.lower()
+        
+        # Check each slang term for logistics intent
+        for term in slang_terms:
+            if term in self.logistics_intent_rules:
+                rule = self.logistics_intent_rules[term]
+                return (
+                    rule.get("intent"),
+                    rule.get("severity"),
+                    rule.get("description")
+                )
+        
+        # Check for logistics keywords
+        for intent, keywords in self.logistics_keywords.items():
+            for keyword in keywords:
+                if keyword in text_lower:
+                    return (intent, "medium", f"Detected logistics keyword: {keyword}")
+        
+        return None, None, None
 
 
 if __name__ == "__main__":
