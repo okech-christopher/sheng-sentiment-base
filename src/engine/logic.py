@@ -20,13 +20,139 @@ class RefinementResult:
     reasoning: str
 
 
+class RecursiveSlangResolver:
+    """Advanced resolver for multi-intent Sheng sentences.
+    
+    Handles complex sentences with multiple intents using:
+    - Weighting matrix for intent prioritization
+    - Verb proximity analysis
+    - Contextual intent resolution
+    """
+    
+    # Intent categories and their weights
+    INTENT_WEIGHTS = {
+        "financial": 0.8,
+        "logistics": 0.7,
+        "social": 0.6,
+        "emotional": 0.5
+    }
+    
+    # Financial distress keywords
+    FINANCIAL_KEYWORDS = {
+        "sapa", "chapaa", "do", "doh", "luku", "kuset", "ganji", "mullah",
+        "mulla", "pesa", "mali", "fedha", "kash", "cash", "money", "bill",
+        "debt", "loan", "advance", "salary", "pay", "stima", "kplc"
+    }
+    
+    # Logistics keywords
+    LOGISTICS_KEYWORDS = {
+        "boda", "stage", "route", "traffic", "jam", "karao", "mreki", "mabs",
+        "expressway", "flyover", "cbd", "westlands", "thika", "mombasa", "road"
+    }
+    
+    # Social commerce keywords
+    SOCIAL_KEYWORDS = {
+        "mboga", "genge", "squad", "crew", "team", "gang", "fam", "family",
+        "sherehe", "party", "celebration", "birthday", "wedding", "event"
+    }
+    
+    def __init__(self):
+        """Initialize the resolver."""
+        self.all_keywords = {
+            "financial": self.FINANCIAL_KEYWORDS,
+            "logistics": self.LOGISTICS_KEYWORDS,
+            "social": self.SOCIAL_KEYWORDS
+        }
+    
+    def detect_intents(self, text: str) -> Dict[str, float]:
+        """Detect multiple intents in text with confidence scores.
+        
+        Args:
+            text: Input text to analyze
+            
+        Returns:
+            Dictionary of intent -> confidence score
+        """
+        text_lower = text.lower()
+        intents = {}
+        
+        # Count keyword occurrences for each intent
+        for intent, keywords in self.all_keywords.items():
+            count = sum(1 for keyword in keywords if keyword in text_lower)
+            if count > 0:
+                # Base confidence from keyword frequency
+                base_confidence = min(1.0, count * 0.3)
+                # Apply intent weight
+                weighted_confidence = base_confidence * self.INTENT_WEIGHTS.get(intent, 0.5)
+                intents[intent] = weighted_confidence
+        
+        return intents
+    
+    def resolve_primary_intent(self, intents: Dict[str, float], text: str) -> Tuple[str, float]:
+        """Resolve primary intent using weighting matrix.
+        
+        Args:
+            intents: Dictionary of intent -> confidence scores
+            text: Original text for context
+            
+        Returns:
+            Tuple of (primary_intent, confidence)
+        """
+        if not intents:
+            return "general", 0.0
+        
+        # Sort by confidence score
+        sorted_intents = sorted(intents.items(), key=lambda x: x[1], reverse=True)
+        
+        # If there's a clear winner
+        if len(sorted_intents) == 1 or sorted_intents[0][1] > sorted_intents[1][1] + 0.2:
+            return sorted_intents[0]
+        
+        # Use verb proximity for tie-breaking
+        return self._verb_proximity_resolution(sorted_intents[:2], text)
+    
+    def _verb_proximity_resolution(self, top_intents: List[Tuple[str, float]], text: str) -> Tuple[str, float]:
+        """Resolve ties using verb proximity analysis.
+        
+        Args:
+            top_intents: Top 2 intents with their scores
+            text: Original text
+            
+        Returns:
+            Tuple of (resolved_intent, confidence)
+        """
+        tokens = text.lower().split()
+        
+        # Find positions of keywords for each intent
+        intent_positions = {}
+        for intent, _ in top_intents:
+            keywords = self.all_keywords[intent]
+            positions = []
+            for i, token in enumerate(tokens):
+                if token in keywords:
+                    positions.append(i)
+            if positions:
+                intent_positions[intent] = min(positions)  # First occurrence
+        
+        # Choose intent with earliest keyword occurrence
+        if intent_positions:
+            primary_intent = min(intent_positions, key=intent_positions.get)
+            # Use the original confidence score
+            original_confidence = dict(top_intents)[primary_intent]
+            return primary_intent, original_confidence
+        
+        # Fallback to highest confidence
+        return top_intents[0]
+
+
 class ShengLogicRefiner:
     """Advanced logic for Sheng sentiment disambiguation.
     
     Handles:
-    - Negation detection (e.g., "si fiti" → not good)
-    - Intensity scaling (e.g., "fiti sana" → very good)
-    - Contextual disambiguation (e.g., "niko fiti" → I'm okay vs "fiti" → good)
+    - Negation detection (e.g., "si fiti" -> not good)
+    - Intensity scaling (e.g., "fiti sana" -> very good)
+    - Contextual disambiguation (e.g., "niko fiti" -> I'm okay vs "fiti" -> good)
+    - Multi-intent resolution with RecursiveSlangResolver
     """
     
     # Negation patterns in Sheng/Swahili
@@ -40,6 +166,24 @@ class ShengLogicRefiner:
         r'\bhanipati\b',  # "hanipati" (doesn't hurt me)
         r'\bhaifai\b',  # "haifai" (not necessary)
     ]
+    
+    def __init__(self):
+        """Initialize the logic refiner."""
+        self.negation_regex = [re.compile(pattern, re.IGNORECASE) for pattern in self.NEGATION_PATTERNS]
+        
+        # Compile contextual patterns
+        self.contextual_patterns = {}
+        for term, rules in self.CONTEXTUAL_RULES.items():
+            self.contextual_patterns[term] = {}
+            for rule_name, rule_data in rules.items():
+                self.contextual_patterns[term][rule_name] = {
+                    'patterns': [re.compile(pattern, re.IGNORECASE) for pattern in rule_data['patterns']],
+                    'sentiment': rule_data['sentiment'],
+                    'reasoning': rule_data['reasoning']
+                }
+        
+        # Initialize recursive resolver
+        self.intent_resolver = RecursiveSlangResolver()
     
     # Intensity modifiers
     INTENSITY_MODIFIERS = {
@@ -174,6 +318,27 @@ class ShengLogicRefiner:
         reasoning = []
         sentiment_adjusted = False
         
+        # Check for multi-intent resolution first
+        intents = self.intent_resolver.detect_intents(text)
+        if intents:
+            primary_intent, confidence = self.intent_resolver.resolve_primary_intent(intents, text)
+            
+            # Adjust sentiment based on primary intent
+            if primary_intent == "financial":
+                # Financial distress is usually negative
+                if refined_sentiment == "neutral":
+                    refined_sentiment = "negative"
+                    refined_score = -0.6
+                    reasoning.append("Financial intent detected - adjusted to negative")
+                    sentiment_adjusted = True
+            elif primary_intent == "social":
+                # Social context is usually positive
+                if refined_sentiment == "neutral":
+                    refined_sentiment = "positive"
+                    refined_score = 0.6
+                    reasoning.append("Social intent detected - adjusted to positive")
+                    sentiment_adjusted = True
+        
         # Check for negation
         if self.detect_negation(text):
             # Flip sentiment for negation
@@ -206,7 +371,7 @@ class ShengLogicRefiner:
         # Calculate confidence adjustment
         confidence_adjustment = 0.0
         if sentiment_adjusted:
-            confidence_adjustment = 0.1  # Boost confidence for refined predictions
+            confidence_adjustment = 0.15  # Boost confidence for refined predictions
         
         return RefinementResult(
             sentiment_adjusted=sentiment_adjusted,

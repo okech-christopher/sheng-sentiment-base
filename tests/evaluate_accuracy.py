@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.tokenizers.sheng_tokenizer import ShengTokenizer
 from src.tokenizers.intent_engine import ShengIntentEngine
+from src.engine.logic import ShengLogicRefiner
 
 
 @dataclass
@@ -32,15 +33,17 @@ class EvaluationMetrics:
 class AccuracyEvaluator:
     """Evaluate Sheng-Native API accuracy against golden dataset."""
     
-    def __init__(self, tokenizer: ShengTokenizer = None, intent_engine: ShengIntentEngine = None):
+    def __init__(self, tokenizer: ShengTokenizer = None, intent_engine: ShengIntentEngine = None, logic_refiner: ShengLogicRefiner = None):
         """Initialize the evaluator.
         
         Args:
             tokenizer: Optional ShengTokenizer instance
             intent_engine: Optional ShengIntentEngine instance
+            logic_refiner: Optional ShengLogicRefiner instance
         """
         self.tokenizer = tokenizer or ShengTokenizer()
         self.intent_engine = intent_engine or ShengIntentEngine()
+        self.logic_refiner = logic_refiner or ShengLogicRefiner()
     
     def load_golden_dataset(self, path: str = "data/processed/golden_dataset.jsonl") -> List[Dict[str, Any]]:
         """Load golden dataset from JSONL file.
@@ -77,18 +80,29 @@ class AccuracyEvaluator:
         # Tokenize
         result = self.tokenizer.tokenize(text)
         
+        # Apply logic refinements
+        refinement_result = self.logic_refiner.refine_sentiment(
+            text, 
+            result.sentiment_label, 
+            result.sentiment_score, 
+            result.slang_terms
+        )
+        
+        # Update sentiment if refined
+        predicted_sentiment = refinement_result.refined_sentiment if refinement_result.sentiment_adjusted else result.sentiment_label
+        
         # Run intent engine
         intent_result = self.intent_engine.detect_intent(text, result.slang_terms)
         
         return {
             "text": text,
-            "predicted_sentiment": result.sentiment_label,
+            "predicted_sentiment": predicted_sentiment,
             "predicted_logistics": intent_result.is_logistics,
             "predicted_intent": intent_result.intent_type,
             "true_sentiment": sample["sentiment_label"],
             "true_logistics": sample["is_logistics"],
             "true_intent": sample["logistics_intent"],
-            "sentiment_correct": result.sentiment_label == sample["sentiment_label"],
+            "sentiment_correct": predicted_sentiment == sample["sentiment_label"],
             "logistics_correct": intent_result.is_logistics == sample["is_logistics"]
         }
     
