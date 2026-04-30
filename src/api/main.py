@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from ..tokenizers.sheng_tokenizer import ShengTokenizer
 from ..tokenizers.intent_engine import ShengIntentEngine
 from ..engine.logic import ShengLogicRefiner
+from ..engine.pipeline import ShengInferencePipeline
 from .middleware import RequestLoggingMiddleware, PerformanceMiddleware
 from .models import (
     AnalyzeRequest,
@@ -24,26 +25,22 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
-# Global instances
-tokenizer: ShengTokenizer = None
-intent_engine: ShengIntentEngine = None
-logic_refiner: ShengLogicRefiner = None
+# Global pipeline instance
+pipeline: ShengInferencePipeline = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application lifecycle - initialize tokenizer on startup."""
-    global tokenizer, intent_engine, logic_refiner
+    """Manage application lifecycle - initialize pipeline on startup."""
+    global pipeline
     
     # Startup
     logger.info("Starting Sheng-Native API...")
     try:
-        tokenizer = ShengTokenizer()
-        intent_engine = ShengIntentEngine()
-        logic_refiner = ShengLogicRefiner()
+        pipeline = ShengInferencePipeline()
         logger.info("Sheng-Native API initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize tokenizer: {e}")
+        logger.error(f"Failed to initialize pipeline: {e}")
         raise
     
     yield
@@ -141,6 +138,7 @@ async def analyze_text(request: AnalyzeRequest):
     - Logistics intent detection (police reports, traffic, route suggestions)
     - Code-switching pattern detection
     - Slang term identification
+    - Multi-intent resolution with RecursiveSlangResolver
     
     Args:
         request: Analysis request with text and options
@@ -148,61 +146,39 @@ async def analyze_text(request: AnalyzeRequest):
     Returns:
         AnalysisResponse with full analysis results
     """
-    if tokenizer is None:
+    if pipeline is None:
         raise HTTPException(status_code=503, detail="Service not initialized")
     
     try:
-        # Tokenize the text
-        result = tokenizer.tokenize(request.text)
-        
-        # Apply logic refinements
-        refinement_result = logic_refiner.refine_sentiment(
-            request.text, 
-            result.sentiment_label, 
-            result.sentiment_score, 
-            result.slang_terms
+        # Run complete pipeline analysis
+        result = pipeline.analyze(
+            request.text,
+            include_code_switches=request.include_code_switches,
+            include_logistics=request.include_logistics
         )
-        
-        # Update sentiment if refined
-        if refinement_result.sentiment_adjusted:
-            result.sentiment_label = refinement_result.refined_sentiment
-        
-        # Run intent engine for logistics detection
-        intent_result = intent_engine.detect_intent(request.text, result.slang_terms)
         
         # Build logistics intent object
         logistics_intent_obj = None
-        if intent_result.is_logistics:
+        if result.is_logistics and result.logistics_intent:
             logistics_intent_obj = LogisticsIntent(
-                intent=intent_result.intent_type,
-                severity=intent_result.severity,
-                description=intent_result.description
+                intent=result.logistics_intent,
+                severity=result.logistics_severity,
+                description=result.logistics_description
             )
-        
-        # Calculate combined confidence
-        base_confidence = intent_result.intent_score
-        refinement_boost = refinement_result.confidence_adjusted if refinement_result.sentiment_adjusted else 0.0
-        combined_confidence = min(1.0, base_confidence + refinement_boost)
         
         # Build response
         response = AnalysisResponse(
-            original_text=result.original_text,
+            original_text=result.text,
             normalized_text=result.normalized_text,
             tokens=result.tokens,
             slang_terms=result.slang_terms,
-            code_switches=result.code_switches if request.include_code_switches else [],
+            code_switches=result.code_switches,
             sentiment_score=result.sentiment_score,
             sentiment_label=result.sentiment_label,
-            logistics_intent=logistics_intent_obj if request.include_logistics else None,
-            is_logistics=intent_result.is_logistics,
-            confidence=combined_confidence,
-            metadata={
-                **result.metadata,
-                "is_logistics": intent_result.is_logistics,
-                "intent_score": intent_result.intent_score,
-                "refinement_applied": refinement_result.sentiment_adjusted,
-                "refinement_reasoning": refinement_result.reasoning
-            }
+            logistics_intent=logistics_intent_obj,
+            is_logistics=result.is_logistics,
+            confidence=result.confidence,
+            metadata=result.metadata
         )
         
         return response
