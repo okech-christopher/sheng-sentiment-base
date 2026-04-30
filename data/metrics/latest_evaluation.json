@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-01T00:00:00",
+  "dataset": "data/processed/golden_dataset.jsonl",
+  "total_samples": 500,
+  "sentiment_accuracy": 0.0,
+  "sentiment_precision": 0,
+  "sentiment_recall": 0,
+  "logistics_accuracy": 0.7,
+  "logistics_precision": 0,
+  "logistics_recall": 0.0,
+  "overall_accuracy": 0.35,
+  "target_met": false
+}

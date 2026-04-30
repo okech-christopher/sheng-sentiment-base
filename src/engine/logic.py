@@ -184,6 +184,16 @@ class ShengLogicRefiner:
         
         # Initialize recursive resolver
         self.intent_resolver = RecursiveSlangResolver()
+        
+        # Initialize intensity modifiers
+        self.INTENSITY_MODIFIERS = {
+            "sana": 1.5,  # "fiti sana" (very good)
+            "kabisa": 1.4,  # "fiti kabisa" (completely good)
+            "mengi": 1.3,  # "fiti mengi" (very good)
+            "tu": 0.7,  # "fiti tu" (just okay)
+            "kidogo": 0.8,  # "fiti kidogo" (a bit good)
+            "hivi": 0.9,  # "fiti hivi" (this good)
+        }
     
     # Intensity modifiers
     INTENSITY_MODIFIERS = {
@@ -295,6 +305,81 @@ class ShengLogicRefiner:
         
         return current_sentiment, f"No context pattern matched for {term}"
     
+    def _calculate_final_confidence(
+        self,
+        sentiment: str,
+        score: float,
+        logistics_result,
+        intents: Dict[str, float],
+        text: str
+    ) -> Tuple[str, float]:
+        """Calculate final confidence and apply re-classification logic.
+        
+        Args:
+            sentiment: Current sentiment label
+            score: Current sentiment score
+            logistics_result: Logistics intent detection result
+            intents: Detected intents from recursive resolver
+            text: Original text for context
+            
+        Returns:
+            Tuple of (final_sentiment, final_confidence)
+        """
+        # Base confidence from logistics intent
+        base_confidence = logistics_result.intent_score
+        
+        # Apply fintech boost weighting logic
+        text_lower = text.lower()
+        tokens = text_lower.split()
+        
+        # Financial context boost
+        financial_tokens = ['sapa', 'kuset', 'ganji']
+        for token in tokens:
+            if token in financial_tokens and intents.get("financial", 0) > 0:
+                # Apply 0.25 boost to sentiment score
+                score = min(1.0, score + 0.25)
+                base_confidence = min(1.0, base_confidence + 0.25)
+                if sentiment == "neutral":
+                    sentiment = "negative"
+                    score = -abs(score)  # Ensure negative for financial distress
+                break
+        
+        # Logistics context boost
+        logistics_tokens = ['boda', 'nduthi', 'package']
+        for token in tokens:
+            if token in logistics_tokens and intents.get("logistics", 0) > 0:
+                # Apply 0.20 boost to logistics intent
+                base_confidence = min(1.0, base_confidence + 0.20)
+                break
+        
+        # Apply weighting logic for financial distress
+        if intents.get("financial", 0) > 0:
+            financial_confidence = intents["financial"]
+            
+            # WEIGHTING: If 'Sapa' or 'Kuset' detected and logistics score < 0.7, FORCE re-classification
+            if financial_confidence > self.LOGISTICS_CONFIDENCE_THRESHOLD and logistics_result.intent_score < self.FINANCIAL_RECLASSIFICATION_THRESHOLD:
+                # Check for specific financial distress keywords
+                financial_keywords = ["sapa", "kuset", "chapaa", "do", "doh", "luku", "ganji", "mullah"]
+                
+                if any(keyword in text_lower for keyword in financial_keywords):
+                    # Force re-classification to Financial_Distress
+                    if sentiment == "neutral":
+                        sentiment = "negative"
+                        score = -0.8  # Strong negative for financial distress
+                    base_confidence = max(base_confidence, financial_confidence)
+        
+        # Boost confidence for refined predictions
+        refinement_boost = 0.15 if sentiment != self._get_base_sentiment(text) else 0.0
+        
+        # Calculate final confidence
+        final_confidence = min(1.0, base_confidence + refinement_boost)
+        
+        # Ensure minimum threshold for production
+        if final_confidence < self.MIN_CONFIDENCE_THRESHOLD:
+            final_confidence = self.MIN_CONFIDENCE_THRESHOLD
+        
+        return sentiment, final_confidence
+
     def refine_sentiment(
         self,
         text: str,
