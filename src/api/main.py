@@ -12,6 +12,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..tokenizers.sheng_tokenizer import ShengTokenizer
+from ..tokenizers.intent_engine import ShengIntentEngine
+from ..engine.logic import ShengLogicRefiner
 from .models import (
     AnalyzeRequest,
     AnalysisResponse,
@@ -21,19 +23,23 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
-# Global tokenizer instance
+# Global instances
 tokenizer: ShengTokenizer = None
+intent_engine: ShengIntentEngine = None
+logic_refiner: ShengLogicRefiner = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle - initialize tokenizer on startup."""
-    global tokenizer
+    global tokenizer, intent_engine, logic_refiner
     
     # Startup
     logger.info("Starting Sheng-Native API...")
     try:
         tokenizer = ShengTokenizer()
+        intent_engine = ShengIntentEngine()
+        logic_refiner = ShengLogicRefiner()
         logger.info("Sheng-Native API initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize tokenizer: {e}")
@@ -101,14 +107,34 @@ async def analyze_text(request: AnalyzeRequest):
         # Tokenize the text
         result = tokenizer.tokenize(request.text)
         
+        # Apply logic refinements
+        refinement_result = logic_refiner.refine_sentiment(
+            request.text, 
+            result.sentiment_label, 
+            result.sentiment_score, 
+            result.slang_terms
+        )
+        
+        # Update sentiment if refined
+        if refinement_result.sentiment_adjusted:
+            result.sentiment_label = refinement_result.refined_sentiment
+        
+        # Run intent engine for logistics detection
+        intent_result = intent_engine.detect_intent(request.text, result.slang_terms)
+        
         # Build logistics intent object
         logistics_intent_obj = None
-        if result.logistics_intent:
+        if intent_result.is_logistics:
             logistics_intent_obj = LogisticsIntent(
-                intent=result.logistics_intent,
-                severity=result.logistics_severity,
-                description=result.logistics_description
+                intent=intent_result.intent_type,
+                severity=intent_result.severity,
+                description=intent_result.description
             )
+        
+        # Calculate combined confidence
+        base_confidence = intent_result.intent_score
+        refinement_boost = refinement_result.confidence_adjusted if refinement_result.sentiment_adjusted else 0.0
+        combined_confidence = min(1.0, base_confidence + refinement_boost)
         
         # Build response
         response = AnalysisResponse(
@@ -121,11 +147,13 @@ async def analyze_text(request: AnalyzeRequest):
             sentiment_label=result.sentiment_label,
             logistics_intent=logistics_intent_obj if request.include_logistics else None,
             is_logistics=intent_result.is_logistics,
-            confidence=intent_result.intent_score,
+            confidence=combined_confidence,
             metadata={
                 **result.metadata,
                 "is_logistics": intent_result.is_logistics,
-                "intent_score": intent_result.intent_score
+                "intent_score": intent_result.intent_score,
+                "refinement_applied": refinement_result.sentiment_adjusted,
+                "refinement_reasoning": refinement_result.reasoning
             }
         )
         

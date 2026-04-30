@@ -1,0 +1,11 @@
+text,predicted_sentiment,predicted_logistics,predicted_intent,true_sentiment,true_logistics,true_intent,sentiment_correct,logistics_correct
+Buda mtihani kudunda,negative,False,general,negative,False,general,True,True
+Chali sherehe kudunda,positive,False,general,positive,False,general,True,True
+Dem niko sapa,negative,False,general,negative,False,general,True,True
+Jamaa chapaa,positive,False,general,positive,False,general,True,True
+Mbogi ni fiti,positive,False,general,positive,False,general,True,True
+Karao wako mabs,neutral,True,police_report,neutral,True,police_report,True,True
+Jam imekali town,neutral,True,traffic_report,neutral,True,traffic_report,True,True
+Mreki imekwa expressway,neutral,True,obstacle_report,neutral,True,obstacle_report,True,True
+Stage ya CBD imejaa,neutral,True,location_report,neutral,True,location_report,True,True
+Tumia shorcut kuepuka mabs,neutral,True,route_suggestion,neutral,True,route_suggestion,True,True

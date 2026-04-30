@@ -1,0 +1,10 @@
+{"text": "Jam imekali CBD, tumetuma saa tatu", "true_sentiment": "negative", "true_logistics": true, "true_intent": "traffic_report", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T08:00:00"}
+{"text": "Karao wako Westlands, wanawakamata", "true_sentiment": "negative", "true_logistics": true, "true_intent": "police_report", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T08:30:00"}
+{"text": "Mreki imetoka Thika Road, mat imejaa", "true_sentiment": "negative", "true_logistics": true, "true_intent": "obstacle_report", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T09:00:00"}
+{"text": "Stage ya Karen imejaa, tumia shorcut", "true_sentiment": "neutral", "true_logistics": true, "true_intent": "route_suggestion", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T09:30:00"}
+{"text": "Buda niko sapa, nisaidie chapaa", "true_sentiment": "negative", "true_logistics": false, "true_intent": "general", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T10:00:00"}
+{"text": "Hii mbogi ni fiti sana", "true_sentiment": "positive", "true_logistics": false, "true_intent": "general", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T10:30:00"}
+{"text": "Leo tunadunda sherehe", "true_sentiment": "positive", "true_logistics": false, "true_intent": "general", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T11:00:00"}
+{"text": "Ame kudunda mtihani", "true_sentiment": "negative", "true_logistics": false, "true_intent": "general", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T11:30:00"}
+{"text": "Niko fiti poa", "true_sentiment": "neutral", "true_logistics": false, "true_intent": "general", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T12:00:00"}
+{"text": "Avoid panya route karibu Gigiri", "true_sentiment": "neutral", "true_logistics": true, "true_intent": "unofficial_route", "source": "nairobi_traffic_mock", "timestamp": "2026-04-30T12:30:00"}
